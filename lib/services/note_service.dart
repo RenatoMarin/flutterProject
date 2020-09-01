@@ -26,7 +26,7 @@ class NoteService {
 
   //GET MÉTODO
   Future<APIResponse<Note>> getNote(String noteID) {
-    return http.get(API + '/notes' + noteID, headers: headers).then((data) {
+    return http.get(API + '/notes/' + noteID, headers: headers).then((data) {
       if (data.statusCode == 200) {
         final jsonData = json.decode(data.body);
         return APIResponse<Note>(data: Note.fromJson(jsonData));
