@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutterapi/models/note_for_listing.dart';
 import 'package:flutterapi/views/note_modify.dart';
+import 'package:flutterapi/views/note_delete.dart';
 
 class NoteList extends StatelessWidget {
   final notes = [
@@ -41,15 +42,38 @@ class NoteList extends StatelessWidget {
       body: ListView.separated(
         separatorBuilder: (_, __) => Divider(height: 1, color: Colors.green),
         itemBuilder: (_, index) {
-          return ListTile(
-            title: Text(
-              notes[index].noteTitle,
-              style: TextStyle(
-                  color: Theme.of(context)
-                      .primaryColor), //Se for trocado a cor primaria, será trocado a primaryColor também
+          return Dismissible(
+            key: ValueKey(notes[index].noteID),
+            direction: DismissDirection.startToEnd,
+            onDismissed: (direction) {},
+            confirmDismiss: (direction) async {
+              final result = await showDialog(
+                  context: context,
+                  builder: (_) => NoteDelete()); //ShowDialog é Future
+              return result;
+            },
+            background: Container(
+              color: Colors.red,
+              padding: EdgeInsets.only(left: 16),
+              child: Align(
+                child: Icon(Icons.delete, color: Colors.white),
+                alignment: Alignment.centerLeft,
+              ),
             ),
-            subtitle: Text(
-                'Editado em ${formatDateTime(notes[index].latesEditDateTime)}'),
+            child: ListTile(
+              title: Text(
+                notes[index].noteTitle,
+                style: TextStyle(
+                    color: Theme.of(context)
+                        .primaryColor), //Se for trocado a cor primaria, será trocado a primaryColor também
+              ),
+              subtitle: Text(
+                  'Editado em ${formatDateTime(notes[index].latesEditDateTime)}'),
+              onTap: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => NoteModify(noteID: notes[index].noteID)));
+              },
+            ),
           );
         },
         itemCount: notes.length,
