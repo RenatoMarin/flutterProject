@@ -10,7 +10,7 @@ class NoteInsert {
   Map<String, dynamic> toJson() {
     return {
       //noteTitle e noteContent é uma chava para o MAP
-      "noteTitle": noteContent,
+      "noteTitle": noteTitle,
       "noteContent": noteContent
     };
   }
