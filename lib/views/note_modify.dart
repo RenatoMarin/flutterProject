@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutterapi/models/note_insert.dart';
 import 'package:flutterapi/services/note_service.dart';
 import 'package:flutterapi/models/note.dart';
 import 'package:get_it/get_it.dart';
@@ -20,6 +21,7 @@ class _NoteModifyState extends State<NoteModify> {
   String errorMessage;
   Note note;
 
+  //MANIPULADOR DE TEXTOS
   TextEditingController _titleController = TextEditingController();
   TextEditingController _contentController = TextEditingController();
 
@@ -28,20 +30,23 @@ class _NoteModifyState extends State<NoteModify> {
   @override
   void initState() {
     super.initState();
-    setState(() {
-      _isLoading = true;
-    });
-    noteService.getNote(widget.noteID).then((response) {
+    //SOMENTE SE ESTIVER EDITANDO UMA NOTA PODERÁ VER A EDIÇÃO
+    if (isEditing) {
       setState(() {
-        _isLoading = false;
+        _isLoading = true;
       });
-      if (response.error) {
-        errorMessage = response.errorMessage ?? 'Um erro ocorreu';
-      }
-      note = response.data;
-      _titleController.text = note.noteTitle;
-      _contentController.text = note.noteContent;
-    });
+      noteService.getNote(widget.noteID).then((response) {
+        setState(() {
+          _isLoading = false;
+        });
+        if (response.error) {
+          errorMessage = response.errorMessage ?? 'Um erro ocorreu';
+        }
+        note = response.data;
+        _titleController.text = note.noteTitle;
+        _contentController.text = note.noteContent;
+      });
+    }
   }
 
   @override
@@ -66,17 +71,52 @@ class _NoteModifyState extends State<NoteModify> {
                     Container(height: 16),
                     SizedBox(
                       width: double.infinity,
+                      height: 35,
                       child: RaisedButton(
                         child: Text('Enviar',
                             style: TextStyle(color: Colors.white)),
                         color: Theme.of(context).primaryColor,
-                        onPressed: () {
+                        onPressed: () async {
                           if (isEditing) {
                             //Update notas na API
                           } else {
-                            //Create notas na API
+                            setState(() {
+                              _isLoading = true;
+                            });
+
+                            final note = NoteInsert(
+                                noteTitle: _titleController.text,
+                                noteContent: _contentController.text);
+                            final result = await noteService.createNote(note);
+
+                            setState(() {
+                              _isLoading = false;
+                            });
+
+                            final title = 'Note window';
+                            final text = result.error
+                                ? (result.errorMessage ?? 'Um erro aconteceu')
+                                : 'Sua nota foi criada';
+
+                            showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                      title: Text(title),
+                                      content: Text(text),
+                                      actions: <Widget>[
+                                        FlatButton(
+                                          child: Text('Ok'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        )
+                                      ],
+                                    )).then((data) {
+                              if (result.data) {
+                                Navigator.of(context).pop();
+                              }
+                            });
                           }
-                          Navigator.of(context).pop();
                         },
                       ),
                     )
